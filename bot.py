@@ -49,8 +49,7 @@ def handle(m):
     try:
         prompt = f"Extrae el gasto en JSON: {{'fecha': 'DD/MM', 'monto': 0, 'categoria': 'Otros', 'descripcion': ''}}. Texto: {m.text}"
         res = model.generate_content(prompt)
-        data = json.loads(res.text.replace('```json', '').replace('
-```', '').strip())
+        data = json.loads(res.text.replace("```json", "").replace("```", "").strip())
         
         sheet.append_row([data['fecha'], data['monto'], data['categoria'], data['descripcion']])
         bot.reply_to(m, f"✅ Registrado: ${data['monto']} en {data['categoria']}")
