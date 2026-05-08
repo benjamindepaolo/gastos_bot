@@ -40,7 +40,7 @@ sheet = client.open(SHEET_NAME).sheet1
 
 # Gemini
 genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -49,7 +49,8 @@ def handle(m):
     try:
         prompt = f"Extrae el gasto en JSON: {{'fecha': 'DD/MM', 'monto': 0, 'categoria': 'Otros', 'descripcion': ''}}. Texto: {m.text}"
         res = model.generate_content(prompt)
-        data = json.loads(res.text.replace('```json', '').replace('```', '').strip())
+        data = json.loads(res.text.replace('```json', '').replace('
+```', '').strip())
         
         sheet.append_row([data['fecha'], data['monto'], data['categoria'], data['descripcion']])
         bot.reply_to(m, f"✅ Registrado: ${data['monto']} en {data['categoria']}")
