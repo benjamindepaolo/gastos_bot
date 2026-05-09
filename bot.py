@@ -71,7 +71,22 @@ def handle(m):
         fecha_exacta = fecha_local.strftime("%d/%m %H:%M")
 
         # Le pedimos a Gemini solo los datos financieros (sacamos la fecha del prompt)
-        prompt = f"Extrae el gasto en JSON: {{'monto': 0, 'categoria': '', 'descripcion': ''}}. OBLIGATORIO: La 'categoria' debe ser una de estas: 'Carne', 'Verduras', 'Supermercado', 'Amigos', 'Amor', 'Gastos hormiga', 'Otros'. REGLA ESPECIAL: Si el texto menciona a 'Guille', la categoria DEBE ser 'Amor'. Texto: {m.text}"
+        prompt = f"""
+        Analiza este gasto: "{m.text}"
+        
+        Extrae la información en formato JSON:
+        {{
+          "monto": 0,
+          "categoria": "Otros",
+          "descripcion": ""
+        }}
+
+        REGLAS DE ORO:
+        1. Categorías: 'Carne', 'Verduras', 'Supermercado', 'Amigos', 'Amor', 'Gastos hormiga', 'Otros'.
+        2. Si el texto dice 'guille' (no importa si es mayúscula o minúscula), la categoría DEBE ser 'Amor'.
+        3. Si no hay un número, pon 0 en 'monto'.
+        4. Responde ÚNICAMENTE el JSON puro.
+        """
         res = model.generate_content(prompt)
         data = json.loads(res.text.replace("```json", "").replace("```", "").strip())
         
