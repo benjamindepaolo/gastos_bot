@@ -7,6 +7,7 @@ from flask import Flask
 from threading import Thread
 from dotenv import load_dotenv
 from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -64,11 +65,18 @@ bot = telebot.TeleBot(TOKEN)
 @bot.message_handler(func=lambda m: m.from_user.id == MY_ID)
 def handle(m):
     try:
-        prompt = f"Extrae el gasto en JSON: {{'fecha': 'DD/MM', 'monto': 0, 'categoria': 'Otros', 'descripcion': ''}}. Texto: {m.text}"
+        # Captura la fecha de Telegram y la ajusta a hora local (UTC -3)
+        fecha_hora_utc = datetime.utcfromtimestamp(m.date)
+        fecha_local = fecha_hora_utc - timedelta(hours=3)
+        fecha_exacta = fecha_local.strftime("%d/%m %H:%M")
+
+        # Le pedimos a Gemini solo los datos financieros (sacamos la fecha del prompt)
+        prompt = f"Extrae el gasto en JSON: {{'monto': 0, 'categoria': 'Otros', 'descripcion': ''}}. Texto: {m.text}"
         res = model.generate_content(prompt)
         data = json.loads(res.text.replace("```json", "").replace("```", "").strip())
         
-        sheet.append_row([data['fecha'], data['monto'], data['categoria'], data['descripcion']])
+        # Guardamos usando la fecha capturada de Telegram
+        sheet.append_row([fecha_exacta, data['monto'], data['categoria'], data['descripcion']])
         bot.reply_to(m, f"✅ Registrado: ${data['monto']} en {data['categoria']}")
     except Exception as e:
         bot.reply_to(m, f"❌ Error: {e}")
